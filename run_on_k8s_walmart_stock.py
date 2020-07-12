@@ -22,7 +22,7 @@ def get_logger(message_prefix):
 
 
 def download_files():
-    file_name = "/opt/spark/work-dir/walmart_stock.csv"
+    file_name = "/tmp/walmart_stock.csv"
     if os.path.isfile(file_name):
         os.remove(file_name)
 
@@ -54,7 +54,7 @@ def run_spark():
 
     df_schema = StructType(fields=df_fields)
     logger.info("Reading the stock csv file.")
-    df = spark.read.csv('/opt/spark/work-dir/walmart_stock.csv', header=True, schema=df_schema)
+    df = spark.read.csv('/tmp/walmart_stock.csv', header=True, schema=df_schema)
     logger.info("Data frame schema")
     df.printSchema()
     logger.info("Dataframe colmons")
