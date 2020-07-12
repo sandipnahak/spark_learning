@@ -21,8 +21,9 @@ def get_logger(message_prefix):
     return logger
 
 
-def download_files():
-    file_name = "/tmp/walmart_stock.csv"
+def download_files(dir):
+
+    file_name = os.path.join(dir, "walmart_stock.csv")
     if os.path.isfile(file_name):
         os.remove(file_name)
 
@@ -40,13 +41,18 @@ def run_spark():
     app_id = conf.get('spark.app.id')
     app_name = conf.get('spark.app.name')
     message_prefix = '<' + app_name + ' ' + app_id + '>'
+
     logger = get_logger(message_prefix)
     logger.info("Spark app id %s" % app_id)
     logger.info("Spark app name %s" % app_name)
+
     dir = conf.get('spark.sql.warehouse.dir')
     logger.info(dir)
+
     logger.info("downloading walmart stock files to local..")
-    download_files()
+    download_files(dir)
+    file_name = os.path.join(dir, "walmart_stock.csv")
+
 
     # Convert to schema type from default schema type
     df_fields= [StructField('Date', DateType(), nullable=False),
@@ -59,7 +65,7 @@ def run_spark():
 
     df_schema = StructType(fields=df_fields)
     logger.info("Reading the stock csv file.")
-    df = spark.read.csv('/tmp/walmart_stock.csv', header=True, schema=df_schema)
+    df = spark.read.csv(file_name, header=True, schema=df_schema)
 
     logger.info("Data frame schema")
     df.printSchema()
