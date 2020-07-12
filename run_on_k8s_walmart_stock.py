@@ -1,8 +1,8 @@
 import logging
 import sys, os
+from os.path import join, abspath
 
 import urllib.request as requests
-from pyspark import SparkContext, SparkFiles
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import year, month
 
@@ -31,7 +31,11 @@ def download_files():
 
 
 def run_spark():
-    spark = SparkSession.builder.appName("WalmartStock").getOrCreate()
+    warehouse_location = abspath('spark-warehouse')
+    spark = SparkSession.builder.\
+        appName("WalmartStock") \
+        .config("spark.sql.warehouse.dir", warehouse_location) \
+        .getOrCreate()
     conf = spark.sparkContext.getConf()
     app_id = conf.get('spark.app.id')
     app_name = conf.get('spark.app.name')
@@ -39,7 +43,8 @@ def run_spark():
     logger = get_logger(message_prefix)
     logger.info("Spark app id %s" % app_id)
     logger.info("Spark app name %s" % app_name)
-
+    dir = conf.get('spark.sql.warehouse.dir')
+    logger.info(dir)
     logger.info("downloading walmart stock files to local..")
     download_files()
 
@@ -55,10 +60,12 @@ def run_spark():
     df_schema = StructType(fields=df_fields)
     logger.info("Reading the stock csv file.")
     df = spark.read.csv('/tmp/walmart_stock.csv', header=True, schema=df_schema)
+
     logger.info("Data frame schema")
     df.printSchema()
     logger.info("Dataframe colmons")
     logger.info(df.columns)
+
     hv_df = df.withColumn('HV Ratio', df['High']/df['Volume'])
     hv_df.select(['HV Ratio']).show()
     df.createOrReplaceTempView('walmart_stock')
