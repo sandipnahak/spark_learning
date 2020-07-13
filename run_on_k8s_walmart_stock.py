@@ -2,6 +2,7 @@ import logging
 import sys, os
 from os.path import join, abspath
 
+from pyspark import SparkFiles
 import urllib.request as requests
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import year, month
@@ -50,9 +51,13 @@ def run_spark():
     logger.info(dir)
 
     logger.info("downloading walmart stock files to local..")
-    download_files(dir)
-    file_name = os.path.join(dir, "walmart_stock.csv")
+    #download_files(dir)
+    file_name = "walmart_stock.csv"
+    file_path = os.path.join(dir, "walmart_stock.csv")
 
+    url = 'https://raw.githubusercontent.com/sandipnahak/spark_learning/master/walmart_stock.csv'
+
+    spark.sparkContext.addFile(url)
 
     # Convert to schema type from default schema type
     df_fields= [StructField('Date', DateType(), nullable=False),
@@ -65,7 +70,7 @@ def run_spark():
 
     df_schema = StructType(fields=df_fields)
     logger.info("Reading the stock csv file.")
-    df = spark.read.csv(file_name, header=True, schema=df_schema)
+    df = spark.read.csv(SparkFiles.get(file_name), header=True, schema=df_schema)
 
     logger.info("Data frame schema")
     df.printSchema()
