@@ -1,4 +1,4 @@
-#!/
+#!/bin/env python
 import logging
 import sys, os
 from os.path import join, abspath
@@ -25,7 +25,7 @@ def get_logger(message_prefix):
 
 
 def download_files(dir):
-
+    dir="/tmp"
     file_name = os.path.join(dir, "walmart_stock.csv")
     if os.path.isfile(file_name):
         os.remove(file_name)
@@ -56,6 +56,7 @@ def run_spark():
     logger.info("downloading walmart stock files to local..")
     download_files(dir)
     file_name = "walmart_stock.csv"
+    dir = "/tmp"
     file_path = os.path.join(dir, "walmart_stock.csv")
 
     url = 'https://raw.githubusercontent.com/sandipnahak/spark_learning/master/walmart_stock.csv'
