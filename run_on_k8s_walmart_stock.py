@@ -1,8 +1,10 @@
+#!/
 import logging
 import sys, os
 from os.path import join, abspath
 
-from pyspark import SparkFiles
+
+from pyspark import SparkFiles, SparkContext
 import urllib.request as requests
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import year, month
@@ -43,15 +45,16 @@ def run_spark():
     app_name = conf.get('spark.app.name')
     message_prefix = '<' + app_name + ' ' + app_id + '>'
 
+
     logger = get_logger(message_prefix)
     logger.info("Spark app id %s" % app_id)
     logger.info("Spark app name %s" % app_name)
 
     dir = conf.get('spark.sql.warehouse.dir')
     logger.info(dir)
-
+    spark.catalog.refreshByPath(dir)
     logger.info("downloading walmart stock files to local..")
-    #download_files(dir)
+    download_files(dir)
     file_name = "walmart_stock.csv"
     file_path = os.path.join(dir, "walmart_stock.csv")
 
@@ -70,7 +73,7 @@ def run_spark():
 
     df_schema = StructType(fields=df_fields)
     logger.info("Reading the stock csv file.")
-    df = spark.read.csv(SparkFiles.get(file_name), header=True, schema=df_schema)
+    df = spark.read.csv(SparkFiles.get(file_name), header=True, inferSchema=True, schema=df_schema)
 
     logger.info("Data frame schema")
     df.printSchema()
