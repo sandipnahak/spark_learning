@@ -80,7 +80,7 @@ def run_spark():
     df.printSchema()
     logger.info("Dataframe colmons")
     logger.info(df.columns)
-
+    spark.catalog.refreshByPath(dir)
     hv_df = df.withColumn('HV Ratio', df['High']/df['Volume'])
     hv_df.select(['HV Ratio']).show()
     df.createOrReplaceTempView('walmart_stock')
