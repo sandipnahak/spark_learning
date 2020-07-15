@@ -74,7 +74,7 @@ def run_spark():
 
     df_schema = StructType(fields=df_fields)
     logger.info("Reading the stock csv file.")
-    df = spark.read.csv(SparkFiles.get(file_name), header=True, inferSchema=True, schema=df_schema)
+    df = spark.read.csv(file_path, header=True, inferSchema=True, schema=df_schema)
 
     logger.info("Data frame schema")
     df.printSchema()
