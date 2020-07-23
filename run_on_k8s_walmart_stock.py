@@ -24,44 +24,25 @@ def get_logger(message_prefix):
     return logger
 
 
-def download_files(dir):
-    dir="/tmp"
-    file_name = os.path.join(dir, "walmart_stock.csv")
-    if os.path.isfile(file_name):
-        os.remove(file_name)
-
-    url = 'https://raw.githubusercontent.com/sandipnahak/spark_learning/master/walmart_stock.csv'
-    requests.urlretrieve(url, filename=file_name)
-
-
 def run_spark():
-    warehouse_location = abspath('spark-warehouse')
     spark = SparkSession.builder.\
         appName("WalmartStock") \
-        .config("spark.sql.warehouse.dir", warehouse_location) \
         .getOrCreate()
     conf = spark.sparkContext.getConf()
+    sc = spark.sparkContext
     app_id = conf.get('spark.app.id')
     app_name = conf.get('spark.app.name')
     message_prefix = '<' + app_name + ' ' + app_id + '>'
-
-
     logger = get_logger(message_prefix)
     logger.info("Spark app id %s" % app_id)
     logger.info("Spark app name %s" % app_name)
 
-    dir = conf.get('spark.sql.warehouse.dir')
-    logger.info(dir)
-    spark.catalog.refreshByPath(dir)
+    hadoopConf = sc._jsc.hadoopConfiguration()
     logger.info("downloading walmart stock files to local..")
-    download_files(dir)
-    file_name = "walmart_stock.csv"
-    dir = "/tmp"
-    file_path = os.path.join(dir, "walmart_stock.csv")
 
-    url = 'https://raw.githubusercontent.com/sandipnahak/spark_learning/master/walmart_stock.csv'
+    file_name = "s3a://analytics-learning-bucket-us-west-2/walmart_stock.csv"
 
-    spark.sparkContext.addFile(url)
+    #spark.sparkContext.addFile(url)
 
     # Convert to schema type from default schema type
     df_fields= [StructField('Date', DateType(), nullable=False),
@@ -74,13 +55,13 @@ def run_spark():
 
     df_schema = StructType(fields=df_fields)
     logger.info("Reading the stock csv file.")
-    df = spark.read.csv(file_path, header=True, inferSchema=True, schema=df_schema)
+    df = spark.read.csv(file_name, header=True, inferSchema=True, schema=df_schema)
+    sc = spark.sparkContext
 
     logger.info("Data frame schema")
     df.printSchema()
     logger.info("Dataframe colmons")
     logger.info(df.columns)
-    spark.catalog.refreshByPath(dir)
     hv_df = df.withColumn('HV Ratio', df['High']/df['Volume'])
     hv_df.select(['HV Ratio']).show()
     df.createOrReplaceTempView('walmart_stock')
