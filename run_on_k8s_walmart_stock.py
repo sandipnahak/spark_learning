@@ -65,7 +65,7 @@ def run_spark():
     hv_df = df.withColumn('HV Ratio', df['High']/df['Volume'])
     hv_df.select(['HV Ratio']).show()
     df.createOrReplaceTempView('walmart_stock')
-    high_value = spark.sql("select * from walmart_stock order by High desc limit 1;")
+    high_value = spark.sql("select * from walmart_stock order by High desc limit 1")
     high_value.show()
     logger.info(df.sort("High", ascending=False).head(1))
     df.agg({'Close': "avg"}).show()
